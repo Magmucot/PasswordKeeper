@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
 
         self.ans = ""
         self.up_layout = QHBoxLayout()
-        
+
         icon1 = QIcon(":/icons/vpnkey_black.png")
         self.btn_pass = QPushButton()
         self.btn_pass.setIcon(icon1)
