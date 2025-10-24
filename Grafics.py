@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication,
     QLineEdit,
     QMainWindow,
@@ -21,10 +21,10 @@ from PySide6.QtWidgets import (
     QAbstractSpinBox,
 )
 import resources  # noqa: F401
-from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
-from PySide6.QtCore import QSize, Qt, QEvent
-from OOP1 import Shifrator
-from OOP4 import (
+from PyQt6.QtGui import QIcon, QCursor, QAction, QKeySequence
+from PyQt6.QtCore import QSize, Qt, QEvent
+from Shifrator import Shifrator
+from PassworGen import (
     Characters,
     StrengthToEntropy,
     generate_password,
@@ -86,8 +86,8 @@ class MainWindow(QMainWindow):
         self.btn_shifr.setIconSize(QSize(32, 32))
         self.btn_shifr.setFixedSize(40, 40)
 
-        self.up_layout.addWidget(self.btn_shifr)
         self.up_layout.addWidget(self.btn_pass)
+        self.up_layout.addWidget(self.btn_shifr)
         self.up_layout.addStretch()
 
         self.main_layout.addLayout(self.up_layout)
@@ -100,15 +100,16 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.main_layout.addWidget(self.stack)
 
-        self.shifr_page()
         self.pass_page()
+        self.shifr_page()
 
         self.btn_pass.clicked.connect(lambda: self.show_page(0, self.btn_pass))
         self.btn_shifr.clicked.connect(lambda: self.show_page(1, self.btn_shifr))
-        self.show_page(1, self.btn_shifr)
+        self.show_page(0, self.btn_pass)
 
     def copy(self, text):
-        QApplication.clipboard().setText(text)
+        if text:
+            QApplication.clipboard().setText(text)
 
     def show_page(self, page_index, active_button):
         self.stack.setCurrentIndex(page_index)
