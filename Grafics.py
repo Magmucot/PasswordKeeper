@@ -1,43 +1,44 @@
 import sys
-from PyQt6.QtWidgets import (
-    QApplication,
-    QLineEdit,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QTextEdit,
-    QComboBox,
-    QLabel,
-    QStackedWidget,
-    QScrollArea,
-    QMessageBox,
-    QFrame,
-    QGridLayout,
-    QSizePolicy,
-    QSlider,
-    QSpinBox,
-    QAbstractSpinBox,
-)
+
 import resources  # noqa: F401
-from PyQt6.QtGui import QIcon, QCursor, QAction, QKeySequence
-from PyQt6.QtCore import QSize, Qt, QEvent
-from Shifrator import Shifrator
-from PassworGen import (
+from PasswordGen import (
+    CHARACTER_NUMBER,
+    GENERATE_PASSWORD,
     Characters,
     StrengthToEntropy,
     generate_password,
     get_entropy,
-    CHARACTER_NUMBER,
-    GENERATE_PASSWORD,
 )
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QCursor, QIcon
+from PyQt6.QtWidgets import (
+    QAbstractSpinBox,
+    QApplication,
+    QComboBox,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    QSpinBox,
+    QStackedWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+from Shifrator import Shifrator
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Мультитул")
+        self.setWindowTitle("Генератор паролей")
         self.resize(400, 400)
         self.setMinimumSize(QSize(300, 400))
         self.setWindowIcon(QIcon(":/icons/icon.png"))
