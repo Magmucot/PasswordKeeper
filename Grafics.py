@@ -544,6 +544,9 @@ class MainWindow(QMainWindow):
         res = shifrator.opred(stor, tip)
         self.res_output.setText(res)
 
+    def pass_manager_page(self):
+        pass
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
