@@ -1,0 +1,4 @@
+PyQt6>=6.5.0
+passlib>=1.7.4
+cryptography>=41.0.0
+secrets>=1.0.2

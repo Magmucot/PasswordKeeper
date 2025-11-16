@@ -39,17 +39,21 @@ from PasswordGen import (
     get_entropy,
 )
 from PasswordManager import PasswordManager, PasswordIncorrectError, InitializationError
+from typing import Optional, Dict, Any
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    """Главное окно приложения менеджера паролей."""
+
+    def __init__(self) -> None:
+        """Инициализация главного окна и компонентов."""
         super().__init__()
         self.setWindowTitle("Менеджер паролей")
         self.resize(450, 500)
         self.setMinimumSize(QSize(450, 450))
         self.setWindowIcon(QIcon(":/icons/icon.png"))
-        central_widget = QWidget()
 
+        central_widget = QWidget()
         self.setStyleSheet(
             """QWidget {background-color: #121212; color: white; font-family: Work Sans;
                             font-size: 12pt; font-weight: 600;}
@@ -60,22 +64,18 @@ class MainWindow(QMainWindow):
                             QLineEdit, QTextEdit {background-color: #282828; border: white 1px;}
                             QLabel {color: #888; border: solid white 1px}"""
         )
-
         self.orange_btn_style = """QPushButton {background-color: #FF8C00; border-radius: 2px;border: none;}
             QPushButton:hover {background-color: #E07B00;border: none;}
             QPushButton:pressed {background-color: #CC6A00;border: none;}"""
-
         self.btn_active_style = "QPushButton { background-color: #A04602; border-radius: 2px; border: none; }"
         self.btn_inactive_style = "QPushButton { background-color: #FF8C00; border-radius: 2px; border: none; }"
-
         self.setCentralWidget(central_widget)
+
         self.main_layout = QVBoxLayout(central_widget)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
-
         self.btn_style = """QPushButton {color: black;background-color: #FF8C00; border-radius: 2px; border: none;}
             QPushButton:hover {background-color: #E07B00; border: none;}
             QPushButton:pressed {background-color: #CC6A00;border: none;}"""
-
         self.ans = ""
         self.up_layout = QHBoxLayout()
 
@@ -105,7 +105,6 @@ class MainWindow(QMainWindow):
         self.up_layout.addWidget(self.btn_pass_man)
         self.up_layout.addWidget(self.btn_shifr)
         self.up_layout.addStretch()
-
         self.main_layout.addLayout(self.up_layout)
 
         separator = QFrame()
@@ -115,27 +114,27 @@ class MainWindow(QMainWindow):
 
         self.stack = QStackedWidget()
         self.main_layout.addWidget(self.stack)
-
         self.master_password = ""
 
-        self.pass_page()
+        self.pass_gen_page()
         self.pass_manager_page()
         self.shifr_page()
 
         self.btn_pass.clicked.connect(lambda: self.show_page(0, self.btn_pass))
         self.btn_pass_man.clicked.connect(lambda: self.show_page(1, self.btn_pass_man))
         self.btn_shifr.clicked.connect(lambda: self.show_page(2, self.btn_shifr))
-
         self.show_page(0, self.btn_pass)
 
-    def copy(self, text):
+    def copy(self, text: str) -> None:
+        """Копирует текст в буфер обмена."""
         if text:
             QApplication.clipboard().setText(text)
             QMessageBox.information(
                 self, "Скопировано", "Пароль скопирован в буфер обмена."
             )
 
-    def show_page(self, page_index, active_button):
+    def show_page(self, page_index: int, active_button: QPushButton) -> None:
+        """Переключает страницу и обновляет стиль кнопок."""
         self.stack.setCurrentIndex(page_index)
         if page_index == 1:
             self.master_password = str(
@@ -149,7 +148,8 @@ class MainWindow(QMainWindow):
                 else self.btn_inactive_style
             )
 
-    def pass_page(self):
+    def pass_gen_page(self) -> None:
+        """Создает страницу генератора паролей."""
         page = QWidget()
         page.setStyleSheet("""
             QWidget {font-size: 16pt; font-weight: 600;}
@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
             }
         """)
         self.gridLayout = QGridLayout(page)
+
         self.layout_length = QHBoxLayout()
         self.slider_length = QSlider(page)
         self.slider_length.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -187,7 +188,6 @@ class MainWindow(QMainWindow):
         self.slider_length.setMaximum(200)
         self.slider_length.setValue(12)
         self.slider_length.setOrientation(Qt.Orientation.Horizontal)
-
         self.layout_length.addWidget(self.slider_length)
 
         self.cnt_length = QSpinBox(page)
@@ -195,9 +195,7 @@ class MainWindow(QMainWindow):
         self.cnt_length.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_length.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.cnt_length.setMaximum(200)
-
         self.layout_length.addWidget(self.cnt_length)
-
         self.gridLayout.addLayout(self.layout_length, 3, 0, 1, 1)
 
         self.layout_info = QHBoxLayout()
@@ -211,7 +209,6 @@ class MainWindow(QMainWindow):
         self.label_diff.setSizePolicy(sizePolicy)
         self.label_diff.setStyleSheet("font-size: 12pt; font-weight: 600;")
         self.label_diff.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         self.layout_info.addWidget(self.label_diff)
 
         self.label_entropy = QLabel(page)
@@ -221,9 +218,7 @@ class MainWindow(QMainWindow):
         self.label_entropy.setSizePolicy(sizePolicy)
         self.label_entropy.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_entropy.setStyleSheet("font-size: 12pt; font-weight: 600;")
-
         self.layout_info.addWidget(self.label_entropy)
-
         self.gridLayout.addLayout(self.layout_info, 2, 0, 1, 1)
 
         self.layout_password = QHBoxLayout()
@@ -245,6 +240,7 @@ class MainWindow(QMainWindow):
         self.frame.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout = QHBoxLayout(self.frame)
+
         self.password = QLineEdit(self.frame)
         sizePolicy1.setHeightForWidth(self.password.sizePolicy().hasHeightForWidth())
         self.password.setSizePolicy(sizePolicy1)
@@ -297,9 +293,7 @@ class MainWindow(QMainWindow):
         self.btn_visibility.setIconSize(QSize(35, 35))
         self.btn_visibility.setCheckable(True)
         self.btn_visibility.clicked.connect(self.change_visibility)
-
         self.horizontalLayout.addWidget(self.btn_visibility)
-
         self.layout_password.addWidget(self.frame)
 
         self.btn_refresh = QPushButton(page)
@@ -314,7 +308,6 @@ class MainWindow(QMainWindow):
         )
         self.btn_refresh.setIcon(icon1)
         self.btn_refresh.setIconSize(QSize(52, 52))
-
         self.layout_password.addWidget(self.btn_refresh)
 
         self.btn_copy = QPushButton(page)
@@ -326,9 +319,7 @@ class MainWindow(QMainWindow):
         )
         self.btn_copy.setIcon(icon2)
         self.btn_copy.setIconSize(QSize(52, 52))
-
         self.layout_password.addWidget(self.btn_copy)
-
         self.gridLayout.addLayout(self.layout_password, 1, 0, 1, 1)
 
         self.icon_lock = QPushButton(page)
@@ -340,7 +331,6 @@ class MainWindow(QMainWindow):
         )
         self.icon_lock.setIcon(icon1)
         self.icon_lock.setIconSize(QSize(70, 70))
-
         self.gridLayout.addWidget(self.icon_lock, 0, 0, 1, 1)
 
         self.layout_chars = QHBoxLayout()
@@ -351,7 +341,6 @@ class MainWindow(QMainWindow):
         self.btn_lower.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_lower.setCheckable(True)
         self.btn_lower.setChecked(True)
-
         self.layout_lower.addWidget(self.btn_lower)
 
         self.cnt_lower = QSpinBox(page)
@@ -361,9 +350,7 @@ class MainWindow(QMainWindow):
         self.cnt_lower.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_lower.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.cnt_lower.setMaximum(200)
-
         self.layout_lower.addWidget(self.cnt_lower)
-
         self.layout_chars.addLayout(self.layout_lower)
 
         self.verticalLayout = QVBoxLayout()
@@ -382,9 +369,7 @@ class MainWindow(QMainWindow):
         self.cnt_up.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_up.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.cnt_up.setMaximum(200)
-
         self.verticalLayout.addWidget(self.cnt_up)
-
         self.layout_chars.addLayout(self.verticalLayout)
 
         self.verticalLayout_8 = QVBoxLayout()
@@ -392,7 +377,6 @@ class MainWindow(QMainWindow):
         self.btn_nums.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_nums.setCheckable(True)
         self.btn_nums.setChecked(True)
-
         self.verticalLayout_8.addWidget(self.btn_nums)
 
         self.cnt_nums = QSpinBox(page)
@@ -402,9 +386,7 @@ class MainWindow(QMainWindow):
         self.cnt_nums.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_nums.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.cnt_nums.setMaximum(999)
-
         self.verticalLayout_8.addWidget(self.cnt_nums)
-
         self.layout_chars.addLayout(self.verticalLayout_8)
 
         self.verticalLayout_9 = QVBoxLayout()
@@ -417,7 +399,6 @@ class MainWindow(QMainWindow):
         self.btn_spec.setMinimumSize(QSize(0, 33))
         self.btn_spec.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_spec.setCheckable(True)
-
         self.verticalLayout_9.addWidget(self.btn_spec)
 
         self.cnt_spec = QSpinBox(page)
@@ -427,12 +408,10 @@ class MainWindow(QMainWindow):
         self.cnt_spec.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_spec.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.cnt_spec.setMaximum(999)
-
         self.verticalLayout_9.addWidget(self.cnt_spec)
-
         self.layout_chars.addLayout(self.verticalLayout_9)
-
         self.gridLayout.addLayout(self.layout_chars, 4, 0, 1, 1)
+
         self.connect_slider_to_spinbox()
         for attr in GENERATE_PASSWORD:
             widget = getattr(self, attr, None)
@@ -440,45 +419,55 @@ class MainWindow(QMainWindow):
                 widget.clicked.connect(self.set_password)
             else:
                 print(f"[WARN] Нет виджета: {attr}")
-
         self.btn_copy.clicked.connect(lambda: self.copy(self.password.text()))
         self.stack.addWidget(page)
 
-    def connect_slider_to_spinbox(self):
+    def connect_slider_to_spinbox(self) -> None:
+        """Связывает слайдер и спинбокс длины."""
         self.slider_length.valueChanged.connect(self.cnt_length.setValue)
         self.cnt_length.valueChanged.connect(self.slider_length.setValue)
         self.cnt_length.valueChanged.connect(self.set_password)
 
     def get_chars(self) -> str:
+        """Получает строку доступных символов."""
         chars = ""
-
         for btn in Characters:
             if getattr(self, btn.name).isChecked():
                 chars += btn.value
-
         return chars
 
     def set_password(self) -> None:
+        """Генерирует и устанавливает новый пароль."""
         try:
+            min_counts = self.get_min_counts()
+            if sum(min_counts.values()) > self.slider_length.value():
+                QMessageBox.information(
+                    self, "Ошибка", "длина пароля меньше количества нужных символов!"
+                )
+                return
+            diversity = len(min_counts)
             self.password.setText(
                 generate_password(
-                    length=self.slider_length.value(), chars=self.get_chars()
+                    ln=self.slider_length.value(),
+                    chars=self.get_chars(),
+                    min_counts=min_counts,
                 )
             )
-        except IndexError:
+        except (ValueError, IndexError):
             self.password.clear()
-        self.set_entropy()
+        self.set_entropy(diversity)
         self.set_diff()
 
     def set_diff(self) -> None:
+        """Устанавливает уровень сложности пароля."""
         length = len(self.password.text())
         char_num = self.get_character_number()
-
         for strength in StrengthToEntropy:
             if get_entropy(length, char_num) >= strength.value:
                 self.label_diff.setText(f"Сложность: {strength.name}")
 
     def change_visibility(self) -> None:
+        """Переключает видимость пароля."""
         sender = self.sender()
         if sender == self.btn_visibility:
             if sender.isChecked():
@@ -492,21 +481,24 @@ class MainWindow(QMainWindow):
                 self.pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
 
     def get_character_number(self) -> int:
+        """Получает общее число символов."""
         num = 0
-
         for key, val in CHARACTER_NUMBER.items():
             widget = getattr(self, key, None)
             if widget is not None and widget.isChecked():
                 num += val
         return num
 
-    def set_entropy(self) -> None:
+    def set_entropy(self, diversity: int = 1) -> None:
+        """Устанавливает значение энтропии."""
         length = len(self.password.text())
         char_num = self.get_character_number()
-
-        self.label_entropy.setText(f"Entropy: {get_entropy(length, char_num)} bit")
+        self.label_entropy.setText(
+            f"Entropy: {get_entropy(length, char_num, diversity)} bit"
+        )
 
     def validate_master_password(self, pwd: str) -> bool:
+        """Валидирует мастер-пароль."""
         return (
             len(pwd) >= 8
             and any(c.islower() for c in pwd)
@@ -514,8 +506,19 @@ class MainWindow(QMainWindow):
             and any(c.isdigit() for c in pwd)
         )
 
+    def get_min_counts(self) -> Dict[str, int]:
+        """Собирает минимумы из выбранных типов."""
+        min_cnts = {}
+        for btn_name in ["btn_lower", "btn_up", "btn_nums", "btn_spec"]:
+            btn = getattr(self, btn_name, None)
+            if btn and btn.isChecked():
+                cnt = getattr(self, f"cnt_{btn_name.split('_')[1]}", None)
+                if cnt:
+                    min_cnts[btn_name] = max(0, cnt.value())
+        return min_cnts
+
     def pass_manager_page(self) -> None:
-        """Страница менеджера паролей"""
+        """Страница менеджера паролей."""
         page = QWidget()
         toolbar = self._create_toolbar()
         self.dirty = False
@@ -532,25 +535,27 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(page)
         layout.addWidget(toolbar)
         layout.addWidget(splitter)
-
         self.stack.addWidget(page)
         self.disable_interface()
 
-    def disable_interface(self):
+    def disable_interface(self) -> None:
+        """Отключает интерфейс редактирования."""
         self.name_edit.setEnabled(False)
         self.login_edit.setEnabled(False)
         self.pass_edit.setEnabled(False)
         self.link_edit.setEnabled(False)
         self.notes_edit.setEnabled(False)
 
-    def enable_interface(self):
+    def enable_interface(self) -> None:
+        """Включает интерфейс редактирования."""
         self.name_edit.setEnabled(True)
         self.login_edit.setEnabled(True)
         self.pass_edit.setEnabled(True)
         self.link_edit.setEnabled(True)
         self.notes_edit.setEnabled(True)
 
-    def ask_master_password(self, visible=False):
+    def ask_master_password(self, visible: bool = False) -> Optional[str]:
+        """Запрашивает мастер-пароль у пользователя."""
         while True:
             if visible:
                 pwd, ok = QInputDialog.getText(
@@ -577,7 +582,6 @@ class MainWindow(QMainWindow):
                     self.list_widget.setEnabled(True)
                     self._refresh_list()
                     QMessageBox.information(self, "Успех", "Мастер пароль создан!")
-                    print("Пароль: ", pwd)
                     return pwd
                 else:
                     QMessageBox.information(
@@ -590,32 +594,30 @@ class MainWindow(QMainWindow):
                 self.enable_interface()
                 self.list_widget.setEnabled(True)
                 self.load_vault(pwd)
-                QMessageBox.information(self, "Успех", "Хранилище разблокировано.")
+                self._refresh_list()
                 return pwd
             else:
                 QMessageBox.warning(self, "Ошибка", "Неверный мастер-пароль!")
-                print(self.master_password)
                 continue
 
-    def try_unlock(self, password):
+    def try_unlock(self, password: str) -> bool:
+        """Пытается разблокировать хранилище."""
         try:
             PasswordManager(password)
             return True
         except (PasswordIncorrectError, InitializationError):
-            print("Неверно: ", password)
             return False
 
-    def load_vault(self, password):
+    def load_vault(self, password: str) -> None:
+        """Загружает хранилище паролей."""
         try:
             pass_man = PasswordManager(password)
             self.entries = pass_man.get_storage(password)
-        except PasswordIncorrectError:
-            print("Неверный пароль")
-            print(self.master_password[::-1])
-        except InitializationError:
-            print("ошибка инициализации")
+        except (PasswordIncorrectError, InitializationError):
+            pass
 
-    def display_details(self, item):
+    def display_details(self, item) -> None:
+        """Отображает детали выбранной записи."""
         if not self.try_switch():
             return
         entry = self.entries.get(item.text(), None)
@@ -635,16 +637,16 @@ class MainWindow(QMainWindow):
         self.dirty = False
         self.disable_interface()
 
-    def _block_signals(self, block: bool):
+    def _block_signals(self, block: bool) -> None:
         """Helper для блокировки/разблокировки сигналов всех редакторов."""
         editors = [self.name_edit, self.login_edit, self.pass_edit, self.link_edit]
         for editor in editors:
             editor.blockSignals(block)
         self.notes_edit.blockSignals(block)
 
-    def _create_toolbar(self):
+    def _create_toolbar(self) -> QToolBar:
+        """Создает панель инструментов."""
         toolbar = QToolBar("Main Toolbar")
-
         add_action = QAction("➕", self)
         add_action.triggered.connect(self.add_entry)
         toolbar.addAction(add_action)
@@ -660,7 +662,6 @@ class MainWindow(QMainWindow):
         save_action = QAction("💾", self)
         save_action.triggered.connect(self.save_entry)
         toolbar.addAction(save_action)
-
         toolbar.addSeparator()
 
         self.search_input = QLineEdit()
@@ -669,46 +670,66 @@ class MainWindow(QMainWindow):
         self.search_input.setFixedWidth(200)
         toolbar.addWidget(self.search_input)
 
+        change_password_action = QAction(self)
+        icon = QIcon(":/icons/key_white.svg")
+        change_password_action.setIcon(icon)
+        change_password_action.triggered.connect(self.change_master_password)
+        toolbar.addAction(change_password_action)
         return toolbar
 
-    def _create_details_panel(self):
+    def _create_details_panel(self) -> QWidget:
+        """Создает панель деталей записи."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
-
         # Заголовок
         self.name_edit = QLineEdit()
-        """font = self.name_edit.font()
-        font.setPointSize(14)
-        font.setBold(True)
-        self.name_edit.setFont(font)
-        self.name_edit.setStyleSheet("color: #FF8C00;")"""
-
         # Поля
         self.login_edit = QLineEdit()
-
         self.pass_edit = QLineEdit()
         self.pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.notes_edit = QTextEdit()
-
         # Ссылка
         link_layout = QHBoxLayout()
         self.link_edit = QLineEdit()
         self.link_edit.setPlaceholderText("https://example.com")
         self.btn_open_link = QPushButton("🌌")
         self.btn_open_link.clicked.connect(self.open_link)
-
         # Кнопки
-
         btn_layout = QHBoxLayout()
-
-        self.show_pass_btn = QPushButton("👁")
+        self.show_pass_btn = QPushButton()
         self.show_pass_btn.setStyleSheet(self.orange_btn_style)
+        self.show_pass_btn.setFixedSize(20, 20)
+        self.show_pass_btn.setCheckable(True)
+        self.show_pass_btn.setChecked(False)
         self.show_pass_btn.clicked.connect(self.change_visibility)
+        icon = QIcon()
+        icon.addFile(
+            ":/icons/visibility_off_black.svg",
+            QSize(),
+            QIcon.Mode.Normal,
+            QIcon.State.Off,
+        )
+        icon.addFile(
+            ":/icons/visibility_black.svg", QSize(), QIcon.Mode.Normal, QIcon.State.On
+        )
+        icon.addFile(
+            ":/icons/visibility_black.svg",
+            QSize(),
+            QIcon.Mode.Disabled,
+            QIcon.State.Off,
+        )
+        icon.addFile(
+            ":/icons/visibility_off_black.svg",
+            QSize(),
+            QIcon.Mode.Disabled,
+            QIcon.State.On,
+        )
+        self.show_pass_btn.setIcon(icon)
+        self.show_pass_btn.setIconSize(QSize(20, 20))
 
         copy_btn = QPushButton("📋")
         copy_btn.clicked.connect(lambda: self.copy(self.pass_edit.text()))
         copy_btn.setStyleSheet(self.orange_btn_style)
-
         btn_layout.addWidget(self.show_pass_btn)
         btn_layout.addWidget(copy_btn)
         btn_layout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding))
@@ -735,7 +756,27 @@ class MainWindow(QMainWindow):
         layout.addStretch()
         return widget
 
-    def open_link(self):
+    def change_master_password(self) -> None:
+        """Меняет мастер-пароль."""
+        choice = QMessageBox.question(
+            self,
+            "Мастер-пароль",
+            "Вы уверены что хотите сменить мастер-пароль?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if choice == QMessageBox.StandardButton.Yes:
+            master_password = self.ask_master_password()
+            if not master_password:
+                return
+            new_password = self.ask_master_password(visible=True)
+            pass_man = PasswordManager(master_password)
+            pass_man.change_password(master_password, new_password)
+        elif choice == QMessageBox.StandardButton.No:
+            QMessageBox.information(self, "Выход", "Отмена смены пароля")
+            return
+
+    def open_link(self) -> None:
+        """Открывает ссылку в браузере."""
         url = self.link_edit.text().strip()
         if not url:
             return
@@ -743,18 +784,19 @@ class MainWindow(QMainWindow):
             url = "https://" + url
         QDesktopServices.openUrl(QUrl(url))
 
-    def _refresh_list(self, filter_text: str = ""):
+    def _refresh_list(self, filter_text: str = "") -> None:
+        """Обновляет список записей с фильтром."""
         self.list_widget.clear()
         for site_name, entry in self.entries.items():
             if filter_text.lower() in site_name.lower():
                 self.list_widget.addItem(site_name)
 
-    def add_entry(self):
+    def add_entry(self) -> None:
+        """Добавляет новую запись."""
         self.is_creating = True
         self.curr_entry = None
         self._clear_details()
         self.enable_interface()
-
         self.login_edit.setFocus()
         if any(
             [
@@ -768,7 +810,8 @@ class MainWindow(QMainWindow):
         ):
             self.mark_dirty()
 
-    def _clear_details(self):
+    def _clear_details(self) -> None:
+        """Очищает поля деталей."""
         self.blockSignals(True)
         self.name_edit.clear()
         self.login_edit.clear()
@@ -777,12 +820,34 @@ class MainWindow(QMainWindow):
         self.notes_edit.clear()
         self.blockSignals(False)
 
-    def delete_entry(self):
+    def delete_entry(self) -> None:
+        """Удаляет выбранную запись."""
+        self.disable_interface()
+        self.list_widget.setEnabled(False)
+        while True:
+            pwd, ok = QInputDialog.getText(
+                self,
+                "Мастер-пароль",
+                "Введите мастер-пароль:",
+                echo=QLineEdit.EchoMode.Password,
+            )
+            if not ok:
+                QMessageBox.information(self, "Выход", "Доступ к хранилищу отменён.")
+                self.enable_interface()
+                self.list_widget.setEnabled(True)
+                return
+            if self.try_unlock(pwd):
+                master_password = pwd
+                break
+            else:
+                QMessageBox.warning(self, "Ошибка", "Неверный мастер-пароль!")
+                continue
         try:
-            master_password = self.master_password[::-1]
             pass_manager = PasswordManager(master_password)
             if not self.curr_entry:
                 QMessageBox.warning(self, "Ошибка", "Выберите запись для удаления.")
+                self.enable_interface()
+                self.list_widget.setEnabled(True)
                 return
             confirm = QMessageBox.question(
                 self,
@@ -791,45 +856,50 @@ class MainWindow(QMainWindow):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if confirm == QMessageBox.StandardButton.Yes:
-                pass_manager.delete_from_storage(master_password, self.curr_entry())
-                pass_manager.get_storage(master_password)
+                pass_manager.delete_from_storage(master_password, self.curr_entry)
+                self.entries = pass_manager.get_storage(master_password)
+            self.curr_entry = None
+            self._refresh_list()
+            self._clear_details()
+            self.enable_interface()
+            self.list_widget.setEnabled(True)
+        except (PasswordIncorrectError, InitializationError):
+            self.enable_interface()
+            self.list_widget.setEnabled(True)
+            pass
 
-                self.curr_entry = None
-                self._refresh_list()
-                self._clear_details()
-        except PasswordIncorrectError:
-            print("Неверный пароль")
-            print(self.master_password[::-1])
-        except InitializationError:
-            print("ошибка инициализации")
-
-    def save_entry(self):
+    def save_entry(self) -> None:
+        """Сохраняет запись в хранилище."""
         try:
             master_password = self.master_password[::-1]
             pass_manager = PasswordManager(master_password)
-
             name = self.name_edit.text().strip()
+            if not name:
+                QMessageBox.information(
+                    self,
+                    "Ошибка",
+                    "Введите имя для сохранения!",
+                )
+                return
             login = self.login_edit.text().strip()
             password = self.pass_edit.text().strip()
             link = self.link_edit.text().strip()
             note = self.notes_edit.toPlainText()
-
             pass_manager.add_to_storage(
                 master_password, name, login, password, link, note
             )
             self.entries = pass_manager.get_storage(master_password)
             self.disable_interface()
             self._refresh_list()
-        except PasswordIncorrectError:
-            print("Неверный пароль")
-            print(self.master_password[::-1])
-        except InitializationError:
-            print("ошибка инициализации")
+        except (PasswordIncorrectError, InitializationError):
+            pass
 
-    def mark_dirty(self):
+    def mark_dirty(self) -> None:
+        """Отмечает изменения как несохраненные."""
         self.dirty = True
 
-    def try_switch(self):
+    def try_switch(self) -> bool:
+        """Проверяет несохраненные изменения перед переключением."""
         if self.dirty:
             choice = QMessageBox.question(
                 self,
@@ -839,7 +909,6 @@ class MainWindow(QMainWindow):
                 | QMessageBox.StandardButton.Discard
                 | QMessageBox.StandardButton.Cancel,
             )
-
             if choice == QMessageBox.StandardButton.Save:
                 self.save_entry()
                 self.dirty = False
@@ -851,17 +920,16 @@ class MainWindow(QMainWindow):
                 return False
         return True
 
-    def shifr_page(self):
+    def shifr_page(self) -> None:
+        """Создает страницу шифратора."""
         page = QWidget()
         layout = QVBoxLayout(page)
-
         self.input_text = QTextEdit()
         self.input_text.setPlaceholderText("Введите текст")
         layout.addWidget(self.input_text)
 
         input_deystv = QLabel("Выберите действие (шифровка или дешифровка):")
         layout.addWidget(input_deystv)
-
         self.combo_deystv = QComboBox()
         self.combo_deystv.addItem("Шифровать")
         self.combo_deystv.addItem("Дешифровать")
@@ -869,7 +937,6 @@ class MainWindow(QMainWindow):
 
         input_tip = QLabel("Выберите шифр (Цезарь или Виженер):")
         layout.addWidget(input_tip)
-
         self.combo_tip = QComboBox()
         self.combo_tip.addItem("Цезарь")
         self.combo_tip.addItem("Виженер")
@@ -897,6 +964,7 @@ class MainWindow(QMainWindow):
         btn_copy.setFixedHeight(20)
         policy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
         btn_copy.setSizePolicy(policy)
+
         layout_btns.addWidget(btn)
         layout_btns.addWidget(btn_copy)
         btn.clicked.connect(self.btn_shifr_click)
@@ -912,7 +980,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(scroll_area)
         self.stack.addWidget(page)
 
-    def btn_shifr_click(self):
+    def btn_shifr_click(self) -> None:
+        """Выполняет шифрование/дешифрование."""
         stor = self.combo_deystv.currentText()
         tip = self.combo_tip.currentText()
         text = self.input_text.toPlainText()

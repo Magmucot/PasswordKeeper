@@ -8,15 +8,22 @@ from cryptography.hazmat.primitives import hashes
 
 
 class PasswordIncorrectError(ValueError):
+    """Ошибка неверного пароля."""
+
     pass
 
 
 class InitializationError(ValueError):
+    """Ошибка инициализации."""
+
     pass
 
 
 class PasswordManager:
+    """Менеджер для хранения и управления паролями."""
+
     def __init__(self, password, path="passwords.txt"):
+        """Инициализация для существующего файла"""
         if os.path.exists(path):
             self._salt = None
             self._master_hash = ""
@@ -29,10 +36,10 @@ class PasswordManager:
                 return
             except PasswordIncorrectError:
                 raise PasswordIncorrectError("Неверный пароль!")
-
             except Exception as e:
                 raise InitializationError(str(e))
         else:
+            # Инициализация нового файла
             self._salt = os.urandom(16)
             self._master_hash = self.hash_password(password)
             self._pass_path = path
@@ -41,6 +48,7 @@ class PasswordManager:
             self.save_storage(password, path, self._storage)
 
     def change_password(self, old_password, new_password):
+        # Проверка старого пароля и смена
         if not self.verify_password(old_password, self._master_hash):
             raise PasswordIncorrectError("Старый пароль некорректен!")
         decrypted = self.decrypt_data(old_password, self._storage)
@@ -49,15 +57,16 @@ class PasswordManager:
         self.save_storage(new_password, self._pass_path, encrypted)
 
     def change_path(self, password, path):
+        """Смена пути к файлу"""
         if not self.verify_password(password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
         self._pass_path = path
         self.load_storage(password, path)
 
     def encrypt_data(self, password: str, data):
+        """Шифрование данных"""
         if not self.verify_password(password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
-
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(), length=32, salt=self._salt, iterations=100000
         )
@@ -67,6 +76,7 @@ class PasswordManager:
         return res_json
 
     def save_storage(self, password, path, encrypted_data):
+        """Сохранение зашифрованных данных в файл"""
         if not self.verify_password(password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
         try:
@@ -81,6 +91,7 @@ class PasswordManager:
             raise InitializationError(str(e))
 
     def load_storage(self, password, path):
+        """Загрузка данных из файла"""
         try:
             with open(path) as storage:
                 content = storage.read().strip()
@@ -90,24 +101,24 @@ class PasswordManager:
                 hash_b64, salt_b64, str_data = parts
                 self._master_hash = base64.urlsafe_b64decode(hash_b64.encode()).decode()
                 self._salt = base64.urlsafe_b64decode(salt_b64.encode())
-
                 if not self.verify_password(password, self._master_hash):
                     raise PasswordIncorrectError("Пароль некорректен!")
-
                 self._storage = str_data
-
         except PasswordIncorrectError:
             raise PasswordIncorrectError("Пароль некорректен!")
         except Exception as e:
             raise InitializationError(str(e))
 
     def hash_password(self, password: str) -> str:
+        """Хэширование пароля"""
         return pbkdf2_sha256.hash(password)
 
     def verify_password(self, input_password: str, stored_hash: str) -> bool:
+        """Проверка пароля по хэшу"""
         return pbkdf2_sha256.verify(input_password, stored_hash)
 
     def decrypt_data(self, password, data):
+        """Расшифровка данных"""
         if not self.verify_password(password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
         kdf = PBKDF2HMAC(
@@ -119,6 +130,7 @@ class PasswordManager:
         return res_json
 
     def to_json(self, data) -> str:
+        """Сериализация в JSON"""
         try:
             return json.dumps(data, ensure_ascii=False, indent=2)
         except (TypeError, ValueError) as e:
@@ -127,6 +139,7 @@ class PasswordManager:
     def add_to_storage(
         self, master_password, place, name, password, link=None, notes=None
     ):
+        """Добавление записи в хранилище"""
         if not self.verify_password(master_password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
         try:
@@ -143,6 +156,7 @@ class PasswordManager:
         self.save_storage(master_password, self._pass_path, self._storage)
 
     def delete_from_storage(self, master_password, place):
+        """Удаление записи из хранилища"""
         if not self.verify_password(master_password, self._master_hash):
             raise PasswordIncorrectError("Пароль некорректен!")
         try:
@@ -156,6 +170,7 @@ class PasswordManager:
         self.save_storage(master_password, self._pass_path, self._storage)
 
     def get_storage(self, master_password):
+        """Получение всего хранилища"""
         if not self.verify_password(master_password, self._master_hash):
             raise PasswordIncorrectError("Старый пароль некорректен")
         try:
