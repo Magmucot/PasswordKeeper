@@ -59,7 +59,10 @@ PasswordKeeper/
 
 #### 4.Вкладка Storage — управление записями (CRUD).
 
+Фото проекта:
+Генератор паролей
+Magmucot<img width="446" height="425" alt="изображение" src="https://github.com/user-attachments/assets/b0cadc31-0b45-4826-88f4-b9b3c75cf3f1" />
 
 ## 📜 Лицензия
 
-### MIT License © 2025 Magmucot
+### MIT License © 2025
