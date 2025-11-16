@@ -42,7 +42,7 @@ class PasswordManager:
 
     def change_password(self, old_password, new_password):
         if not self.verify_password(old_password, self._master_hash):
-            raise PasswordIncorrectError("Старый пароль некорректен")
+            raise PasswordIncorrectError("Старый пароль некорректен!")
         decrypted = self.decrypt_data(old_password, self._storage)
         self._master_hash = self.hash_password(new_password)
         encrypted = self.encrypt_data(new_password, decrypted)
@@ -50,25 +50,25 @@ class PasswordManager:
 
     def change_path(self, password, path):
         if not self.verify_password(password, self._master_hash):
-            raise PasswordIncorrectError("Пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
         self._pass_path = path
         self.load_storage(password, path)
 
     def encrypt_data(self, password: str, data):
         if not self.verify_password(password, self._master_hash):
-            raise PasswordIncorrectError("Пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
 
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(), length=32, salt=self._salt, iterations=100000
         )
         key = base64.urlsafe_b64encode(kdf.derive(password.encode("utf-8")))
         fernet = Fernet(key)
-        res_json = fernet.encrypt(data.encode("utf-8")).decode("utf-8")
+        res_json = fernet.encrypt(data.encode()).decode("utf-8")
         return res_json
 
     def save_storage(self, password, path, encrypted_data):
         if not self.verify_password(password, self._master_hash):
-            raise PasswordIncorrectError("Пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
         try:
             with open(path, "w") as storage:
                 salt_b64 = base64.urlsafe_b64encode(self._salt).decode("utf-8")
@@ -86,18 +86,18 @@ class PasswordManager:
                 content = storage.read().strip()
                 parts = content.split("|")
                 if len(parts) != 3:
-                    raise InitializationError("Неверный формат файла")
+                    raise InitializationError("Неверный формат файла!")
                 hash_b64, salt_b64, str_data = parts
                 self._master_hash = base64.urlsafe_b64decode(hash_b64.encode()).decode()
                 self._salt = base64.urlsafe_b64decode(salt_b64.encode())
 
                 if not self.verify_password(password, self._master_hash):
-                    raise PasswordIncorrectError("Пароль некорректен")
+                    raise PasswordIncorrectError("Пароль некорректен!")
 
                 self._storage = str_data
 
         except PasswordIncorrectError:
-            raise PasswordIncorrectError("Пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
         except Exception as e:
             raise InitializationError(str(e))
 
@@ -109,13 +109,13 @@ class PasswordManager:
 
     def decrypt_data(self, password, data):
         if not self.verify_password(password, self._master_hash):
-            raise PasswordIncorrectError("Пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
         kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(), length=32, salt= self._salt, iterations=100000
+            algorithm=hashes.SHA256(), length=32, salt=self._salt, iterations=100000
         )
         key = base64.urlsafe_b64encode(kdf.derive(password.encode("utf-8")))
         fernet = Fernet(key)
-        res_json = fernet.decrypt(data).decode("utf-8")
+        res_json = fernet.decrypt(data.encode()).decode("utf-8")
         return res_json
 
     def to_json(self, data) -> str:
@@ -124,9 +124,11 @@ class PasswordManager:
         except (TypeError, ValueError) as e:
             raise ValueError(f"Ошибка сериализации: {e}") from e
 
-    def add_to_storage(self, master_password, place, name, password, link=None):
+    def add_to_storage(
+        self, master_password, place, name, password, link=None, notes=None
+    ):
         if not self.verify_password(master_password, self._master_hash):
-            raise PasswordIncorrectError("Старый пароль некорректен")
+            raise PasswordIncorrectError("Пароль некорректен!")
         try:
             decrypted = json.loads(self.decrypt_data(master_password, self._storage))
         except Exception:
@@ -134,10 +136,25 @@ class PasswordManager:
         decrypted[str(place)] = {"name": name, "password": password}
         if link:
             decrypted[str(place)]["link"] = link
-            data = self.to_json(decrypted)
+        if notes:
+            decrypted[str(place)]["notes"] = notes
+        data = self.to_json(decrypted)
         self._storage = self.encrypt_data(master_password, data)
         self.save_storage(master_password, self._pass_path, self._storage)
-    
+
+    def delete_from_storage(self, master_password, place):
+        if not self.verify_password(master_password, self._master_hash):
+            raise PasswordIncorrectError("Пароль некорректен!")
+        try:
+            decrypted = json.loads(self.decrypt_data(master_password, self._storage))
+        except Exception:
+            decrypted = {}
+        if place in decrypted:
+            del decrypted[place]
+        data = self.to_json(decrypted)
+        self._storage = self.encrypt_data(master_password, data)
+        self.save_storage(master_password, self._pass_path, self._storage)
+
     def get_storage(self, master_password):
         if not self.verify_password(master_password, self._master_hash):
             raise PasswordIncorrectError("Старый пароль некорректен")
@@ -146,9 +163,3 @@ class PasswordManager:
         except Exception:
             decrypted = {}
         return decrypted
-
-
-pm = PasswordManager("123456789")
-pm.add_to_storage("123456789", "mag", "name", "123", "mag.com")
-print(pm.get_storage("123456789"))
-

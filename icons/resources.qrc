@@ -18,5 +18,7 @@
         <file>visibility_off_black.svg</file>
         <file>visibility_off_white.svg</file>
         <file>vpnkey_black.png</file>
+        <file>folder_white.svg</file>
+        <file>folder_black.svg</file>
     </qresource>
 </RCC>
