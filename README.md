@@ -75,5 +75,5 @@ PasswordKeeper/
 <img width="447" height="437" alt="изображение" src="https://github.com/user-attachments/assets/c04bcb8d-3f73-4965-a343-f683923921cd" />
 
 ## 📜 Лицензия
-
+###Magmucot
 ### MIT License © 2025
